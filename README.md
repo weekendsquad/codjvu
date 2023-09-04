@@ -1,2 +1,2 @@
 # codjvu
-yet another codejavu-backend rebuild in django
+yet another codejavu-backend rebuild, this time in django
