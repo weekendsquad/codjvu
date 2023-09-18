@@ -1,0 +1,590 @@
+openapi: 3.0.3
+info:
+  title: Swagger Codejavu - OpenAPI 3.0
+  description: >-
+    api list for codejavu 
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+servers:
+  - url: http://codejavu.com/api/v1
+tags:
+  - name: snippet
+    description: Snippet properties
+  - name: snippetInfo
+    description: Snippet Essential Info properties
+  - name: language
+    description: language properties
+  - name: tag
+    description: tag properties
+  - name: user
+    description: Operations about user
+paths:
+  /snippet:
+    post:
+        tags:
+          - snippet
+        summary: Create resource (authentication required)
+        description: Creqate a new snippet
+        operationId: createSnippet
+        requestBody:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SnippetInsert'
+          required: true
+        responses:
+          '200':
+            description: Successful operation
+          '405':
+            description: Invalid input
+        security:
+          - JWTAuth: []
+  /snippet/{snippetUUID}:
+    get:
+      tags:
+        - snippet
+      summary: Retrieve resource (authentication required)
+      description: retrieve a snippet by uuid
+      operationId: getSnippet
+      parameters:
+        - name: snippetUUID
+          in: path
+          description: snippet UUID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Snippet'
+        '404':
+          description: Snippet not found
+      security:
+        - JWTAuth: []
+    put:
+      tags:
+        - snippet
+      summary: Update resource (authentication required)
+      description: Update an existing snippet by uuid
+      operationId: updateSnippet
+      parameters:
+        - name: snippetUUID
+          in: path
+          description: snippet Id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Snippet'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/Snippet'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Snippet'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Snippet'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Snippet not found
+        '405':
+          description: Validation exception
+      security:
+      - JWTAuth: []
+    delete:
+      tags:
+        - snippet
+      summary: Delete a snippet (authentication required)
+      description: Delete a snippet by uuid
+      operationId: removeSnippet
+      parameters:
+        - name: snippetUUID
+          in: path
+          description: snippet uuid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Snippet not found
+      security:
+        - JWTAuth: []
+  /snippets:
+    get:
+      tags:
+        - snippetInfo
+      summary: Retrieve resource (authentication required)
+      description: Finds own Snippets
+      operationId: findOwnSnippets()
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SnippetInfo'
+        '400':
+          description: Invalid status value
+      security:
+        - JWTAuth: []
+  /language:
+    get:
+      tags:
+        - language
+      summary: Retrieve resource (authentication required)
+      description: Get all available languages of the sytem
+      operationId: getLanguages
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Language'
+      security:
+        - JWTAuth: []
+    post:
+      tags:
+        - language
+      summary: Add resource (system admin only)
+      description: Add new languages to the system
+      operationId: addLanguage
+      requestBody:
+        description: Add list of new languages to the system
+        content:
+                  application/json:
+                    schema:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Language'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Language'
+        '405':
+          description: Invalid input
+      security:
+        - JWTAuth: []
+  /tag:
+    get:
+      tags:
+        - tag
+      summary: Retrieve resource (authentication required)
+      description: Get all available tags
+      operationId: getTags
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+      security:
+      - JWTAuth: []
+    post:
+      tags:
+          - tag
+      summary: Add resource (authentication required)
+      description: Add new tags
+      operationId: addTag
+      requestBody:
+        content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/TagInsert'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+        '405':
+          description: Invalid input
+      security:
+      - JWTAuth: []
+  /user:
+    post:
+      tags:
+        - user
+      summary: Create user
+      description: This can only be done by the logged in user.
+      operationId: createUser
+      requestBody:
+        description: Created user object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        default:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/User'
+  /user/login:
+    post:
+      tags:
+        - user
+      summary: Logs user into the system
+      description: ''
+      operationId: loginUser
+      requestBody:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: successful operation
+          headers:
+            X-Rate-Limit:
+              description: calls per hour allowed by the user
+              schema:
+                type: integer
+                format: int32
+            X-Expires-After:
+              description: date in UTC when token expires
+              schema:
+                type: string
+                format: date-time
+          content:
+            application/xml:
+              schema:
+                type: string
+            application/json:
+              schema:
+                type: string
+        '400':
+          description: Invalid username/password supplied
+  /user/logout:
+    get:
+      tags:
+        - user
+      summary: Logs out current logged in user session
+      description: ''
+      operationId: logoutUser
+      parameters: []
+      responses:
+        default:
+          description: successful operation
+  /user/{username}:
+    get:
+      tags:
+        - user
+      summary: Get user by user name
+      description: ''
+      operationId: getUserByName
+      parameters:
+        - name: username
+          in: path
+          description: 'The name that needs to be fetched. Use user1 for testing. '
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid username supplied
+        '404':
+          description: User not found
+    put:
+      tags:
+        - user
+      summary: Update user
+      description: This can only be done by the logged in user.
+      operationId: updateUser
+      parameters:
+        - name: username
+          in: path
+          description: name that need to be deleted
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Update an existent user in the store
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        default:
+          description: successful operation
+    delete:
+      tags:
+        - user
+      summary: Delete user
+      description: This can only be done by the logged in user.
+      operationId: deleteUser
+      parameters:
+        - name: username
+          in: path
+          description: The name that needs to be deleted
+          required: true
+          schema:
+            type: string
+      responses:
+        '400':
+          description: Invalid username supplied
+        '404':
+          description: User not found
+components:
+  schemas:
+    Snippet:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        snippet:
+          type: string
+          description: code snippet as text
+          example: "#include<stdio.h>"
+        shared_type:
+          type: integer
+          description: Snippet access is private, public or group. 0 for Private, 1 for Public, 2 for Group
+          example: 0
+          enum:
+            - 0
+            - 1
+            - 2
+        language_id:
+          type: integer
+          format: int64
+          example: 10
+        uuid:
+          type: string
+          description: unique uuid v4 for snippet url
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+        urls:
+          type: array
+          items:
+            $ref: '#/components/schemas/Url'
+          
+      xml:
+        name: snippet
+    SnippetInsert:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          format: int64
+          example: 10
+        snippet:
+          type: string
+          description: code snippet as text
+          example: "#include<stdio.h>"
+        shared_type:
+          type: string
+          description: Snippet access is private, public or group. 0 for Private, 1 for Public, 2 for Group
+          example: 0
+          enum:
+            - 0
+            - 1
+            - 2
+        language_id:
+          type: integer
+          format: int64
+          example: 10
+        tag_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+          example: [1,4,6]
+        urls:
+          type: array
+          items:
+            type: string
+          example: [ "www.sawd.2r", "www.stackunderflow.com"]
+      xml:
+        name: snippet
+    SnippetInfo:
+      type: object
+      properties:
+        uuid:
+          type: string
+          description: unique uuid v4 for snippet url
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        user_id:
+          type: integer
+          format: int64
+          example: 10
+        shared_type:
+          type: integer
+          description: Snippet access is private, public or group. 0 for Private, 1 for Public, 2 for Group
+          example: 0
+          enum:
+            - 0
+            - 1
+            - 2
+        language_id:
+          type: integer
+          format: int64
+          example: 10
+        tag_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+          example: [1,3,5]
+        date_time:
+          type: string
+          format: date-time
+          example: "2023-09-18T14:30:00Z"
+      xml:
+        name: snippetInfo
+    Language:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        language:
+          type: string
+          description: available language name
+          example: 'Python'
+      xml:
+        name: snippetInfo
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        tag:
+          type: string
+          example: "Image Processing"
+      xml:
+        name: tag
+    Url:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        url:
+          type: string
+          example: "hhttp://sacwc.cos/awd"
+        snippet_id: 
+          type: integer
+          format: int64
+          example: 10
+      xml:
+        name: url
+    TagInsert:
+      type: object
+      properties:
+        tag:
+          type: array
+          items:
+            type: string
+          example: ["Image Processing", "Artificial Intelligence"]
+        user_id:
+          type: integer
+          format: int64
+      xml:
+        name: tagInsert
+    User:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        email:
+          type: string
+          example: john@email.com
+        password:
+          type: string
+          example: '12345678'
+      xml:
+        name: user
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        type:
+          type: string
+        message:
+          type: string
+  securitySchemes:
+    JWTAuth:
+        type: apiKey
+        name: Authorization
+        in: header
+        description: Use a valid JWT token as the value. Prefix it with "Bearer ".
