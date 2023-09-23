@@ -15,20 +15,22 @@ servers:
 tags:
   - name: snippet
     description: Snippet properties
-  - name: snippetInfo
-    description: Snippet Essential Info properties
   - name: language
     description: language properties
   - name: tag
     description: tag properties
   - name: user
     description: Operations about user
+  - name: group
+    description: info about group
+  - name: share
+    description: info about group
 paths:
   /snippet:
     post:
         tags:
           - snippet
-        summary: Create resource (authentication required)
+        summary: Create snippet (authentication required)
         description: Creqate a new snippet
         operationId: createSnippet
         requestBody:
@@ -48,7 +50,7 @@ paths:
     get:
       tags:
         - snippet
-      summary: Retrieve resource (authentication required)
+      summary: Retrieve snippet (authentication required)
       description: retrieve a snippet by uuid
       operationId: getSnippet
       parameters:
@@ -72,7 +74,7 @@ paths:
     put:
       tags:
         - snippet
-      summary: Update resource (authentication required)
+      summary: Update snippet (authentication required)
       description: Update an existing snippet by uuid
       operationId: updateSnippet
       parameters:
@@ -137,10 +139,10 @@ paths:
   /snippets:
     get:
       tags:
-        - snippetInfo
-      summary: Retrieve resource (authentication required)
+        - snippet
+      summary: Retrieve snippets information (authentication required)
       description: Finds own Snippets
-      operationId: findOwnSnippets()
+      operationId: getAllOwnSnippets()
       responses:
         '200':
           description: successful operation
@@ -158,7 +160,7 @@ paths:
     get:
       tags:
         - language
-      summary: Retrieve resource (authentication required)
+      summary: Retrieve languages (authentication required)
       description: Get all available languages of the sytem
       operationId: getLanguages
       responses:
@@ -175,7 +177,7 @@ paths:
     post:
       tags:
         - language
-      summary: Add resource (system admin only)
+      summary: Add language (system admin only)
       description: Add new languages to the system
       operationId: addLanguage
       requestBody:
@@ -391,6 +393,398 @@ paths:
           description: Invalid username supplied
         '404':
           description: User not found
+  /group/{groupId}:
+    get:
+      tags:
+        - group
+      summary: Retrieve information of group (authentication required)
+      description: Find group info
+      operationId: getGroup()
+      parameters:
+        - name: groupId
+          in: path
+          description: group id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '403':
+          description: Unauthorized if not group member or owner
+      security:
+        - JWTAuth: []
+    put:
+      tags:
+        - group
+      summary: Retrieve information of group (authentication required)
+      description: Find group info
+      operationId: updateGroup()
+      parameters:
+        - name: groupId
+          in: path
+          description: group id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '403':
+          description: Unauthorized if not group member or owner
+      security:
+        - JWTAuth: []
+    delete:
+      tags:
+        - group
+      summary: Retrieve information (authentication required)
+      description: Find group info
+      operationId: removeGroup()
+      parameters:
+        - name: groupId
+          in: path
+          description: group id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+             application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '403':
+          description: Unauthorized if not group member or owner
+      security:
+        - JWTAuth: []
+  /group/snippet/{groupId}:
+    get:
+      tags:
+        - group
+      summary: Retrieve resource (authentication required)
+      description: Get snippet related to the group
+      operationId: getGroupSnippet(groupId)
+      parameters:
+        - name: groupId
+          in: path
+          description: group id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SnippetInfo'
+        '400':
+          description: Invalid status value
+      security:
+        - JWTAuth: []
+    post:
+      tags:
+        - group
+      summary: Add snippet(s) to the group resource (authentication required)
+      description: Add snippet(s) to the group
+      operationId: addGroupSnippet(groupId)
+      parameters:
+        - name: groupId
+          in: path
+          description: group id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  snippet_ids:
+                    type: array
+                    items:
+                      type: integer
+
+          required: true
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Invalid status value
+        
+        '403':
+          description: Unauthorized
+      security:
+        - JWTAuth: []
+    put:
+      tags:
+        - group
+      summary: Add resource (authentication required)
+      description: Add snippet to the group
+      operationId: updateGroupSnippet(groupId)
+      parameters:
+        - name: groupId
+          in: path
+          description: group id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  snippet_ids:
+                    type: array
+                    items:
+                      type: integer
+
+          required: true
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Invalid status value
+        
+        '403':
+          description: Unauthorized
+      security:
+        - JWTAuth: []
+  /group/member/{groupId}:
+    get:
+      tags:
+        - group
+      summary: Retrieve group members resource (authentication required)
+      description: Get all group members
+      operationId: getGroupMember(groupId)
+      parameters:
+        - name: groupId
+          in: path
+          description: group id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+        '400':
+          description: Invalid status value
+      security:
+        - JWTAuth: []
+    post:
+      tags:
+        - group
+      summary: Add member(s) to the group (authentication required)
+      description: Add member to the group
+      operationId: addGroupMember()
+      parameters:
+        - name: groupId
+          in: path
+          description: group id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+          required: true
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Invalid status value
+        
+        '403':
+          description: Unauthorized
+      security:
+        - JWTAuth: []
+    put:
+      tags:
+        - group
+      summary: Add resource (authentication required)
+      description: Add snippet to the group
+      operationId: updateGroupMember(groupId)
+      parameters:
+        - name: groupId
+          in: path
+          description: group id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+          required: true
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Invalid status value
+        
+        '403':
+          description: Unauthorized
+      security:
+        - JWTAuth: []
+  /group/info:
+    get:
+      tags:
+        - group
+      summary: Retrieve groups ids associated with the user resource (authentication required)
+      description: Get all associated group info separately owned and member of that groups.
+      operationId: getGroupInfo()
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    owned:
+                      type: array
+                      items:
+                        type: integer
+                    member:
+                      type: array
+                      items:
+                        type: integer
+                        
+        '400':
+          description: Invalid status value
+      security:
+        - JWTAuth: []
+  /snippet/share/{snippetUUID}/{userId}:
+    post:
+      tags:
+        - share
+      summary: Share snippet to a user (authentication required)
+      description: Add member to the group
+      operationId: shareSnippetToUser()
+      parameters:
+        - name: snippetUUID
+          in: path
+          description: snippet uuid
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: userId
+          in: path
+          description: user id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+             application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid status value
+        
+        '403':
+          description: Unauthorized
+      security:
+        - JWTAuth: []
+    delete:
+      tags:
+        - share
+      summary: revoke share snippet to a user (authentication required)
+      description: revoke share a snippet to the user
+      operationId: removeShareSnippetToUser()
+      parameters:
+        - name: snippetUUID
+          in: path
+          description: snippet uuid
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: userId
+          in: path
+          description: user id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+             application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid status value
+        
+        '403':
+          description: Unauthorized
+      security:
+        - JWTAuth: []
+
 components:
   schemas:
     Snippet:
@@ -443,7 +837,7 @@ components:
           description: code snippet as text
           example: "#include<stdio.h>"
         shared_type:
-          type: string
+          type: integer
           description: Snippet access is private, public or group. 0 for Private, 1 for Public, 2 for Group
           example: 0
           enum:
@@ -554,6 +948,18 @@ components:
           format: int64
       xml:
         name: tagInsert
+    Group:
+      type: object
+      properties:
+        group_id:
+          type: integer
+          format: int64
+          example: 2
+        group_name:
+          type: string
+          example: veica
+      xml:
+        name: group
     User:
       type: object
       required:
