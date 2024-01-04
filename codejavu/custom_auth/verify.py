@@ -12,7 +12,7 @@ class CSRFCheck(CsrfViewMiddleware):
 
 
 def enforce_csrf(request):
-    check = CSRFCheck()
+    check = CSRFCheck(request.META.get('HTTP_X_CSRFTOKEN'))
     check.process_request(request)
     reason = check.process_view(request, None, (), {})
     print(reason)
@@ -26,20 +26,20 @@ class JWTAuthentication(BaseAuthentication):
 
         User = get_user_model()
         authorization_header = request.headers.get('Authorization')
-
         if not authorization_header:
             return None
         try:
-            access_token = authorization_header.split(' ')[1]
+            # access_token = authorization_header.split(' ')[1]
+            access_token = authorization_header
             payload = jwt.decode(
                 access_token, settings.SECRET_KEY, algorithms=['HS256'])
-
+            print(payload)
         except jwt.ExpiredSignatureError:
             raise exceptions.AuthenticationFailed('access_token expired')
         except IndexError:
             raise exceptions.AuthenticationFailed('Token prefix missing')
 
-        user = User.objects.filter(id=payload['user_id']).first()
+        user = User.objects.filter(id=payload['id']).first()
         if user is None:
             raise exceptions.AuthenticationFailed('User not found')
 
