@@ -39,7 +39,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'corsheaders',
     "rest_framework",
-    "custom_auth"
+    "custom_auth",
+    "manager",
+    "snippet"
 ]
 
 MIDDLEWARE = [
@@ -83,7 +85,7 @@ DATABASES = {
         'NAME': 'codejavudb',
         'USER': 'postgres',
         'PASSWORD': 'password',
-        'HOST': '0.0.0.0',
+        'HOST': 'localhost',
         'PORT': '5432',
     }
 }
