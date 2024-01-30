@@ -9,12 +9,20 @@ from .serializers import TagSerializer
 TAGS_LIMIT = 5
 
 
-def check_tag_limit(user_id):
+def check_tag_limit(user_id, is_sys_admin, is_pro, is_trial):
     number_of_tags = Tag.objects.filter(user_id=user_id).count()
-    if number_of_tags > 5:
-        return False
-    else:
+    if is_trial or is_pro:
+        if number_of_tags > 20:  # TODO: Get these value from the admin table
+            return False
+        else:
+            return True
+    elif is_sys_admin:
         return True
+    else:
+        if number_of_tags > 5:  # TODO: Get these value from the admin table
+            return False
+        else:
+            return True
 
 
 @api_view(['POST'])
@@ -27,7 +35,8 @@ def tag_view(request):
     serializer = TagSerializer(data=data)
     if serializer.is_valid():
         if not request.user.is_system_admin:
-            if not check_tag_limit(request.user.id):
+            if not check_tag_limit(request.user.id, request.user.is_system_admin,
+                                   request.user.is_pro, request.user.is_trial):
                 return JsonResponse(serializer.errors, status=403)
         serializer.save()
         return JsonResponse(serializer.data, status=201)
