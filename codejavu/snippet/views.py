@@ -1,6 +1,7 @@
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
 from custom_auth.decorators import enforce_csrf
 from .models import Tag
@@ -63,11 +64,27 @@ def tag_list_private_view(request):
 @permission_classes([IsAuthenticated])
 @enforce_csrf
 def tag_update_view(request):
-    pass
+    data = JSONParser().parse(request)
+    try:
+        tag = Tag.objects.get(id=data["id"], user_id=request.user.id)
+    except Tag.DoesNotExist:
+        return HttpResponse(status=404)
+
+    serializer = TagSerializer(tag, data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return JsonResponse(serializer.data)
+    return JsonResponse(serializer.errors, status=400)
 
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 @enforce_csrf
 def tag_delete_view(request):
+    data = JSONParser().parse(request)
+    try:
+        tag = Tag.objects.get(id=data["id"], user_id=request.user.id)
+    except Tag.DoesNotExist:
+        return HttpResponse(status=404)
+    tag.delete()
     return HttpResponse(status=204)
