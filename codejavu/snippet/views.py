@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from custom_auth.decorators import enforce_csrf
 from .models import Tag
-from .serializers import TagSerializer
+from .serializers import TagSerializer, TagReadSerializer
 
 TAGS_LIMIT = 5
 
@@ -46,8 +46,17 @@ def tag_view(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 @csrf_exempt
-def tag_list_view(request):
-    pass
+def tag_list_public_view(request):
+    public_tags_serializer = TagReadSerializer(Tag.objects.filter(user_id__is_system_admin__contains="true"), many=True)
+    return JsonResponse(public_tags_serializer.data, status=200, safe=False)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+@csrf_exempt
+def tag_list_private_view(request):
+    private_tags_serializer = TagReadSerializer(Tag.objects.filter(user_id=request.user.id), many=True)
+    return JsonResponse(private_tags_serializer.data, status=200, safe=False)
 
 
 @api_view(['PUT'])

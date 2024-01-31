@@ -5,9 +5,10 @@ from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
 
 from custom_auth.decorators import enforce_csrf
+from snippet.serializers import TagSerializer
 from .serializers import LanguageSerializer
 from rest_framework import permissions
-from snippet.models import Language
+from snippet.models import Language, Tag
 
 
 class IsSystemAdmin(permissions.BasePermission):
@@ -65,3 +66,11 @@ def language_delete_view(request):
 
     language.delete()
     return HttpResponse(status=204)
+
+
+@api_view(['GET'])
+@permission_classes([IsSystemAdmin])
+@csrf_exempt
+def tag_list_view(request):
+    tags_serializer = TagSerializer(Tag.objects.all(), many=True)
+    return JsonResponse(tags_serializer.data, status=200, safe=False)
