@@ -65,6 +65,7 @@ def tag_list_private_view(request):
 @enforce_csrf
 def tag_update_view(request):
     data = JSONParser().parse(request)
+    data["user_id"] = request.user.id
     try:
         tag = Tag.objects.get(id=data["id"], user_id=request.user.id)
     except Tag.DoesNotExist:
