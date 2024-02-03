@@ -19,4 +19,5 @@ from django.urls import path, include
 urlpatterns = [
     path("api/v1/auth/", include("custom_auth.urls")),
     path("api/v1/manager/", include("manager.urls")),
+    path("api/v1/snippet/", include("snippet.urls")),
 ]
