@@ -23,6 +23,13 @@ class SnippetSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
 
+class SnippetSerializerRead(serializers.ModelSerializer):
+    class Meta:
+        model = Snippet
+        fields = ['id', 'snippet', 'language']
+        read_only_fields = ('id',)
+
+
 class SnippetTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = SnippetTag

@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from custom_auth.decorators import enforce_csrf
 from .models import Tag, Snippet, SnippetTag, Url
 from .serializers import TagSerializer, TagReadSerializer, SnippetSerializer, SnippetTagSerializer, \
-    SnippetTagSerializerRead, SnippetUrlSerializer, SnippetUrlReadSerializer
+    SnippetTagSerializerRead, SnippetUrlSerializer, SnippetUrlReadSerializer, SnippetSerializerRead
 
 TAGS_LIMIT = 5
 
@@ -152,7 +152,7 @@ def snippet_view(request):
 @permission_classes([IsAuthenticated])
 @csrf_exempt
 def snippet_list_view(request):
-    snippet_serializer = SnippetSerializer(Snippet.objects.filter(user=request.user).all(), many=True)
+    snippet_serializer = SnippetSerializerRead(Snippet.objects.filter(user=request.user).all(), many=True)
     return JsonResponse(snippet_serializer.data, status=200, safe=False)
 
 
