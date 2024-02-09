@@ -7,9 +7,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
 from custom_auth.decorators import enforce_csrf
-from .models import Tag, Snippet, SnippetTag
+from .models import Tag, Snippet, SnippetTag, Url
 from .serializers import TagSerializer, TagReadSerializer, SnippetSerializer, SnippetTagSerializer, \
-    SnippetTagSerializerRead
+    SnippetTagSerializerRead, SnippetUrlSerializer, SnippetUrlReadSerializer
 
 TAGS_LIMIT = 5
 
@@ -30,15 +30,15 @@ def check_tag_limit(user_id, is_sys_admin, is_pro, is_trial):
             return True
 
 
-def create_list_of_object(snippet_id, tag_id, key):
-    snippet_tag_data = []
-    for tag in tag_id:
+def create_list_of_object(snippet_id, items, key):
+    snippet_integrated_data = []
+    for item in items:
         data = {
-            key: tag,
+            key: item,
             'snippet': snippet_id
         }
-        snippet_tag_data.append(data)
-    return snippet_tag_data
+        snippet_integrated_data.append(data)
+    return snippet_integrated_data
 
 
 @api_view(['POST'])
@@ -112,6 +112,7 @@ def tag_delete_view(request):
 @transaction.atomic
 def snippet_view(request):
     tag_id = request.data['tag_id']
+    urls = request.data['url']
 
     snippet_data = {
         'user': request.user.id,
@@ -130,10 +131,19 @@ def snippet_view(request):
 
     snippet_tag_data = create_list_of_object(snippet_serializer.data['id'], tag_id, 'tag')
     snippet_tag_serializer = SnippetTagSerializer(data=snippet_tag_data, many=True)
+
+    snippet_url_data = create_list_of_object(snippet_serializer.data['id'], urls, 'url')
+    snippet_url_serializer = SnippetUrlSerializer(data=snippet_url_data, many=True)
+
     if snippet_tag_serializer.is_valid():
         snippet_tag_serializer.save()
     else:
         return JsonResponse(snippet_tag_serializer.errors, status=400, safe=False)
+
+    if snippet_url_serializer.is_valid():
+        snippet_url_serializer.save()
+    else:
+        return JsonResponse(snippet_url_serializer.errors, status=400, safe=False)
 
     return HttpResponse(status=201)
 
@@ -150,13 +160,26 @@ def snippet_list_view(request):
 @permission_classes([IsAuthenticated])
 @csrf_exempt
 def snippet_details_view(request, snippet_id):
+    data = {}
     try:
         snippet_serializer = SnippetSerializer(Snippet.objects.get(id=snippet_id, user=request.user))
-        snippet_tag_serializer = SnippetTagSerializerRead(SnippetTag.objects.filter(snippet=snippet_id).all(), many=True)
-        return JsonResponse({"snippet": snippet_serializer.data, "tag": snippet_tag_serializer.data},
-                            status=200, safe=False)
     except Snippet.DoesNotExist:
         return HttpResponse(status=404)
+    else:
+        data["snippet"] = snippet_serializer.data
+    try:
+        snippet_tag_serializer = SnippetTagSerializerRead(SnippetTag.objects.filter(snippet=snippet_id).all(), many=True)
+    except Tag.DoesNotExist:
+        data["tag"] = []
+    else:
+        data["tag"] = snippet_tag_serializer.data
+    try:
+        snippet_url_serializer = SnippetUrlReadSerializer(Url.objects.filter(snippet=snippet_id).all(), many=True)
+    except Url.DoesNotExist:
+        data["url"] = []
+    else:
+        data["url"] = snippet_url_serializer.data
+    return JsonResponse(data, status=200, safe=False)
 
 
 @api_view(['DELETE'])
@@ -194,12 +217,21 @@ def snippet_update_view(request):
             snippet_tag = SnippetTag.objects.filter(snippet=data['id']).all()
             if snippet_tag:
                 snippet_tag.delete()
+
             snippet_tag_data = create_list_of_object(data['id'], data['tag_id'], 'tag')
             snippet_tag_serializer = SnippetTagSerializer(data=snippet_tag_data, many=True)
+
+            snippet_url_data = create_list_of_object(data['id'], data['url'], 'url')
+            snippet_url_serializer = SnippetUrlSerializer(data=snippet_url_data, many=True)
+
             if snippet_tag_serializer.is_valid():
                 snippet_tag_serializer.save()
             else:
                 return JsonResponse(snippet_tag_serializer.errors, status=400, safe=False)
+            if snippet_url_serializer.is_valid():
+                snippet_url_serializer.save()
+            else:
+                return JsonResponse(snippet_url_serializer.errors, status=400, safe=False)
     except Snippet.DoesNotExist:
         return HttpResponse(status=404)
     except IntegrityError as error:
