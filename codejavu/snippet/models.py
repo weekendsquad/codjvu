@@ -21,8 +21,13 @@ class Snippet(models.Model):
     language = models.ForeignKey(Language, null=True, on_delete=models.SET_NULL)
 
 
+class Url(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    snippet = models.ForeignKey(Snippet, on_delete=models.CASCADE)
+    url = models.URLField()
+
+
 class SnippetTag(models.Model):
     id = models.BigAutoField(primary_key=True)
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
     snippet = models.ForeignKey(Snippet, on_delete=models.CASCADE)
-
