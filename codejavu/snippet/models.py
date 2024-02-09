@@ -24,6 +24,7 @@ class Snippet(models.Model):
 class Url(models.Model):
     id = models.BigAutoField(primary_key=True)
     snippet = models.ForeignKey(Snippet, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     url = models.URLField()
 
 

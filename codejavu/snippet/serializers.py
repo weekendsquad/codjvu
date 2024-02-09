@@ -46,7 +46,7 @@ class SnippetTagSerializerRead(serializers.ModelSerializer):
 class SnippetUrlSerializer(serializers.ModelSerializer):
     class Meta:
         model = Url
-        fields = ['id', 'url', 'snippet']
+        fields = ['id', 'url', 'snippet', 'user']
         read_only_fields = ('id',)
 
 
