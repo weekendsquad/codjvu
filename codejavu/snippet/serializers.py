@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from snippet.models import Tag
+from snippet.models import Tag, Snippet, SnippetTag
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -14,3 +14,23 @@ class TagReadSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ['id', 'tag']
         read_only_fields = ('id',)
+
+
+class SnippetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Snippet
+        fields = ['id', 'user', 'snippet', 'language']
+        read_only_fields = ('id',)
+
+
+class SnippetTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SnippetTag
+        fields = ['id', 'tag', 'snippet']
+        read_only_fields = ('id',)
+
+
+class SnippetTagSerializerRead(serializers.ModelSerializer):
+    class Meta:
+        model = SnippetTag
+        fields = ['id', 'tag']
