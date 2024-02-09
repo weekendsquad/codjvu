@@ -5,7 +5,7 @@ from snippet.models import Tag, Snippet, SnippetTag, Url
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ['id', 'tag', 'user_id']
+        fields = ['id', 'tag', 'user']
         read_only_fields = ('id',)
 
 
@@ -46,7 +46,7 @@ class SnippetTagSerializerRead(serializers.ModelSerializer):
 class SnippetUrlSerializer(serializers.ModelSerializer):
     class Meta:
         model = Url
-        fields = ['id', 'url', 'snippet']
+        fields = ['id', 'url', 'snippet', 'user']
         read_only_fields = ('id',)
 
 

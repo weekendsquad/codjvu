@@ -30,13 +30,20 @@ def check_tag_limit(user_id, is_sys_admin, is_pro, is_trial):
             return True
 
 
-def create_list_of_object(snippet_id, items, key):
+def create_list_of_object(snippet_id, items, key, user=None):
     snippet_integrated_data = []
     for item in items:
-        data = {
-            key: item,
-            'snippet': snippet_id
-        }
+        if user:
+            data = {
+                key: item,
+                'snippet': snippet_id,
+                'user': user
+            }
+        else:
+            data = {
+                key: item,
+                'snippet': snippet_id,
+            }
         snippet_integrated_data.append(data)
     return snippet_integrated_data
 
@@ -47,7 +54,7 @@ def create_list_of_object(snippet_id, items, key):
 def tag_view(request):
     data = request.data
 
-    data['user_id'] = request.user.id
+    data['user'] = request.user.id
     serializer = TagSerializer(data=data)
     if serializer.is_valid():
         if not request.user.is_system_admin:
@@ -71,7 +78,7 @@ def tag_list_public_view(request):
 @permission_classes([IsAuthenticated])
 @csrf_exempt
 def tag_list_private_view(request):
-    private_tags_serializer = TagReadSerializer(Tag.objects.filter(user_id=request.user.id), many=True)
+    private_tags_serializer = TagReadSerializer(Tag.objects.filter(user=request.user), many=True)
     return JsonResponse(private_tags_serializer.data, status=200, safe=False)
 
 
@@ -80,9 +87,9 @@ def tag_list_private_view(request):
 @enforce_csrf
 def tag_update_view(request):
     data = JSONParser().parse(request)
-    data["user_id"] = request.user.id
+    data["user"] = request.user.id
     try:
-        tag = Tag.objects.get(id=data["id"], user_id=request.user.id)
+        tag = Tag.objects.get(id=data["id"], user=request.user)
     except Tag.DoesNotExist:
         return HttpResponse(status=404)
 
@@ -99,7 +106,7 @@ def tag_update_view(request):
 def tag_delete_view(request):
     data = JSONParser().parse(request)
     try:
-        tag = Tag.objects.get(id=data["id"], user_id=request.user.id)
+        tag = Tag.objects.get(id=data["id"], user=request.user)
     except Tag.DoesNotExist:
         return HttpResponse(status=404)
     tag.delete()
@@ -132,7 +139,7 @@ def snippet_view(request):
     snippet_tag_data = create_list_of_object(snippet_serializer.data['id'], tag_id, 'tag')
     snippet_tag_serializer = SnippetTagSerializer(data=snippet_tag_data, many=True)
 
-    snippet_url_data = create_list_of_object(snippet_serializer.data['id'], urls, 'url')
+    snippet_url_data = create_list_of_object(snippet_serializer.data['id'], urls, 'url', request.user.id)
     snippet_url_serializer = SnippetUrlSerializer(data=snippet_url_data, many=True)
 
     if snippet_tag_serializer.is_valid():
@@ -218,10 +225,14 @@ def snippet_update_view(request):
             if snippet_tag:
                 snippet_tag.delete()
 
+            snippet_url = Url.objects.filter(snippet=data['id'], user=request.user).all()
+            if snippet_url:
+                snippet_url.delete()
+
             snippet_tag_data = create_list_of_object(data['id'], data['tag_id'], 'tag')
             snippet_tag_serializer = SnippetTagSerializer(data=snippet_tag_data, many=True)
 
-            snippet_url_data = create_list_of_object(data['id'], data['url'], 'url')
+            snippet_url_data = create_list_of_object(data['id'], data['url'], 'url', request.user.id)
             snippet_url_serializer = SnippetUrlSerializer(data=snippet_url_data, many=True)
 
             if snippet_tag_serializer.is_valid():
