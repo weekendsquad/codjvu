@@ -10,7 +10,7 @@ class Language(models.Model):
 
 class Tag(models.Model):
     id = models.BigAutoField(primary_key=True)
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     tag = models.CharField(max_length=30, unique=True)
 
 
