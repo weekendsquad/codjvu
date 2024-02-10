@@ -53,7 +53,6 @@ def create_list_of_object(snippet_id, items, key, user=None):
 @enforce_csrf
 def tag_view(request):
     data = request.data
-
     data['user'] = request.user.id
     serializer = TagSerializer(data=data)
     if serializer.is_valid():
@@ -69,17 +68,13 @@ def tag_view(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 @csrf_exempt
-def tag_list_public_view(request):
-    public_tags_serializer = TagReadSerializer(Tag.objects.filter(user_id__is_system_admin__contains="true"), many=True)
-    return JsonResponse(public_tags_serializer.data, status=200, safe=False)
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-@csrf_exempt
-def tag_list_private_view(request):
+def tag_list_view(request):
+    data = {}
     private_tags_serializer = TagReadSerializer(Tag.objects.filter(user=request.user), many=True)
-    return JsonResponse(private_tags_serializer.data, status=200, safe=False)
+    public_tags_serializer = TagReadSerializer(Tag.objects.filter(user_id__is_system_admin__contains="true"), many=True)
+    data["private_tag"] = private_tags_serializer.data
+    data["public_tag"] = public_tags_serializer.data
+    return JsonResponse(data, status=200, safe=False)
 
 
 @api_view(['PUT'])
@@ -106,7 +101,7 @@ def tag_update_view(request):
 def tag_delete_view(request):
     data = JSONParser().parse(request)
     try:
-        tag = Tag.objects.get(id=data["id"], user=request.user)
+        tag = Tag.objects.filter(pk__in=data["id"], user=request.user)
     except Tag.DoesNotExist:
         return HttpResponse(status=404)
     tag.delete()
@@ -175,7 +170,8 @@ def snippet_details_view(request, snippet_id):
     else:
         data["snippet"] = snippet_serializer.data
     try:
-        snippet_tag_serializer = SnippetTagSerializerRead(SnippetTag.objects.filter(snippet=snippet_id).all(), many=True)
+        snippet_tag_serializer = SnippetTagSerializerRead(SnippetTag.objects.filter(snippet=snippet_id).all(),
+                                                          many=True)
     except Tag.DoesNotExist:
         data["tag"] = []
     else:
