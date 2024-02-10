@@ -191,7 +191,7 @@ def snippet_details_view(request, snippet_id):
 def snippet_delete_view(request):
     data = JSONParser().parse(request)
     try:
-        snippet = Snippet.objects.get(id=data["id"], user=request.user)
+        snippet = Snippet.objects.filter(pk__in=data["id"], user=request.user)
     except Snippet.DoesNotExist:
         return HttpResponse(status=404)
     snippet.delete()
