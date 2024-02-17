@@ -48,12 +48,22 @@ def create_list_of_object(snippet_id, items, key, user=None):
     return snippet_integrated_data
 
 
-@api_view(['POST'])
+@api_view(['GET', 'POST', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
-@enforce_csrf
 def tag_view(request):
-    data = request.data
+    if request.method == 'POST':
+        return create_tag(request)
+    elif request.method == 'GET':
+        return read_tag(request)
+    elif request.method == 'DELETE':
+        return delete_tag(request)
+    elif request.method == 'PUT':
+        return update_tag(request)
 
+
+@enforce_csrf
+def create_tag(request):
+    data = request.data
     data['user'] = request.user.id
     serializer = TagSerializer(data=data)
     if serializer.is_valid():
@@ -66,26 +76,28 @@ def tag_view(request):
     return JsonResponse(serializer.errors, status=400)
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
 @csrf_exempt
-def tag_list_public_view(request):
+def read_tag(request):
+    data = {}
+    public_tag_data = get_public_tag(request)
+    private_tag_data = get_private_tag(request)
+    data['private'] = private_tag_data
+    data['public'] = public_tag_data
+    return JsonResponse(data, status=200, safe=False)
+
+
+def get_public_tag(request):
     public_tags_serializer = TagReadSerializer(Tag.objects.filter(user_id__is_system_admin__contains="true"), many=True)
-    return JsonResponse(public_tags_serializer.data, status=200, safe=False)
+    return public_tags_serializer.data
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-@csrf_exempt
-def tag_list_private_view(request):
+def get_private_tag(request):
     private_tags_serializer = TagReadSerializer(Tag.objects.filter(user=request.user), many=True)
-    return JsonResponse(private_tags_serializer.data, status=200, safe=False)
+    return private_tags_serializer.data
 
 
-@api_view(['PUT'])
-@permission_classes([IsAuthenticated])
 @enforce_csrf
-def tag_update_view(request):
+def update_tag(request):
     data = JSONParser().parse(request)
     data["user"] = request.user.id
     try:
@@ -100,13 +112,11 @@ def tag_update_view(request):
     return JsonResponse(serializer.errors, status=400)
 
 
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
 @enforce_csrf
-def tag_delete_view(request):
+def delete_tag(request):
     data = JSONParser().parse(request)
     try:
-        tag = Tag.objects.get(id=data["id"], user=request.user)
+        tag = Tag.objects.filter(id__in=data["id"], user=request.user)
     except Tag.DoesNotExist:
         return HttpResponse(status=404)
     tag.delete()
