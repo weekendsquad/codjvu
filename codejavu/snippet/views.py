@@ -121,7 +121,7 @@ def snippet_view(request, snippet_id=None):
     elif request.method == 'GET':
         return read_snippet(request, snippet_id)
     elif request.method == 'DELETE':
-        return delete_snippet()
+        return delete_snippet(request)
     elif request.method == 'PUT':
         return update_snippet(request)
 
@@ -200,7 +200,7 @@ def read_snippet(request, snippet_id=None):
 def delete_snippet(request):
     data = JSONParser().parse(request)
     try:
-        snippet = Snippet.objects.get(id=data["id"], user=request.user)
+        snippet = Snippet.objects.filter(id__in=data["id"], user=request.user)
     except Snippet.DoesNotExist:
         return HttpResponse(status=404)
     snippet.delete()
