@@ -113,11 +113,22 @@ def tag_delete_view(request):
     return HttpResponse(status=204)
 
 
-@api_view(['POST'])
+@api_view(['GET', 'POST', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
+def snippet_view(request, snippet_id=None):
+    if request.method == 'POST':
+        return create_snippet(request)
+    elif request.method == 'GET':
+        return read_snippet(request, snippet_id)
+    elif request.method == 'DELETE':
+        return delete_snippet()
+    elif request.method == 'PUT':
+        return update_snippet(request)
+
+
 @enforce_csrf
 @transaction.atomic
-def snippet_view(request):
+def create_snippet(request):
     tag_id = request.data['tag_id']
     urls = request.data['url']
 
@@ -155,44 +166,38 @@ def snippet_view(request):
     return HttpResponse(status=201)
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
 @csrf_exempt
-def snippet_list_view(request):
-    snippet_serializer = SnippetSerializerRead(Snippet.objects.filter(user=request.user).all(), many=True)
-    return JsonResponse(snippet_serializer.data, status=200, safe=False)
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-@csrf_exempt
-def snippet_details_view(request, snippet_id):
-    data = {}
-    try:
-        snippet_serializer = SnippetSerializer(Snippet.objects.get(id=snippet_id, user=request.user))
-    except Snippet.DoesNotExist:
-        return HttpResponse(status=404)
+def read_snippet(request, snippet_id=None):
+    if snippet_id:
+        data = {}
+        try:
+            snippet_serializer = SnippetSerializer(Snippet.objects.get(id=snippet_id, user=request.user))
+        except Snippet.DoesNotExist:
+            return HttpResponse(status=404)
+        else:
+            data["snippet"] = snippet_serializer.data
+        try:
+            snippet_tag_serializer = SnippetTagSerializerRead(SnippetTag.objects.filter(snippet=snippet_id).all(),
+                                                              many=True)
+        except Tag.DoesNotExist:
+            data["tag"] = []
+        else:
+            data["tag"] = snippet_tag_serializer.data
+        try:
+            snippet_url_serializer = SnippetUrlReadSerializer(Url.objects.filter(snippet=snippet_id).all(),
+                                                              many=True)
+        except Url.DoesNotExist:
+            data["url"] = []
+        else:
+            data["url"] = snippet_url_serializer.data
+        return JsonResponse(data, status=200, safe=False)
     else:
-        data["snippet"] = snippet_serializer.data
-    try:
-        snippet_tag_serializer = SnippetTagSerializerRead(SnippetTag.objects.filter(snippet=snippet_id).all(), many=True)
-    except Tag.DoesNotExist:
-        data["tag"] = []
-    else:
-        data["tag"] = snippet_tag_serializer.data
-    try:
-        snippet_url_serializer = SnippetUrlReadSerializer(Url.objects.filter(snippet=snippet_id).all(), many=True)
-    except Url.DoesNotExist:
-        data["url"] = []
-    else:
-        data["url"] = snippet_url_serializer.data
-    return JsonResponse(data, status=200, safe=False)
+        snippet_serializer = SnippetSerializerRead(Snippet.objects.filter(user=request.user).all(), many=True)
+        return JsonResponse(snippet_serializer.data, status=200, safe=False)
 
 
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
 @enforce_csrf
-def snippet_delete_view(request):
+def delete_snippet(request):
     data = JSONParser().parse(request)
     try:
         snippet = Snippet.objects.get(id=data["id"], user=request.user)
@@ -202,12 +207,9 @@ def snippet_delete_view(request):
     return HttpResponse(status=204)
 
 
-@api_view(['PUT'])
-@permission_classes([IsAuthenticated])
-@enforce_csrf
 @enforce_csrf
 @transaction.atomic
-def snippet_update_view(request):
+def update_snippet(request):
     data = JSONParser().parse(request)
     snippet_data = {
         'user': request.user.id,
