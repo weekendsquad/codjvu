@@ -3,12 +3,13 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
-
+from manager.const import *
 from custom_auth.decorators import enforce_csrf
 from snippet.serializers import TagSerializer
-from .serializers import LanguageSerializer
+from .serializers import LanguageSerializer, SettingSerializer
 from rest_framework import permissions
 from snippet.models import Language, Tag
+from .models import Setting
 
 
 class IsSystemAdmin(permissions.BasePermission):
@@ -74,3 +75,34 @@ def language_delete_view(request):
 def tag_list_view(request):
     tags_serializer = TagSerializer(Tag.objects.all(), many=True)
     return JsonResponse(tags_serializer.data, status=200, safe=False)
+
+
+@csrf_exempt
+def read_tag_limit(request):
+    setting = Setting.objects.get(key=TAG_LIMIT)
+    serializer = SettingSerializer(setting)
+    return JsonResponse(serializer.data)
+
+
+@enforce_csrf
+def update_tag_limit(request):
+    data = JSONParser().parse(request)
+    try:
+        setting_tag_limit = Setting.objects.filter(key=TAG_LIMIT).get()
+    except Setting.DoesNotExist:
+        return HttpResponse(status=404)
+
+    serializer = SettingSerializer(setting_tag_limit, data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return JsonResponse(serializer.data)
+    return JsonResponse(serializer.errors, status=400)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([IsSystemAdmin])
+def setting_tag_limit_view(request):
+    if request.method == 'GET':
+        return read_tag_limit(request)
+    elif request.method == 'PUT':
+        return update_tag_limit(request)
