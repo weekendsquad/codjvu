@@ -7,9 +7,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
 from custom_auth.decorators import enforce_csrf
-from .models import Tag, Snippet, SnippetTag, Url
+from .models import Tag, Snippet, SnippetTag, Url, Language
 from .serializers import TagSerializer, TagReadSerializer, SnippetSerializer, SnippetTagSerializer, \
-    SnippetTagSerializerRead, SnippetUrlSerializer, SnippetUrlReadSerializer, SnippetSerializerRead
+    SnippetTagSerializerRead, SnippetUrlSerializer, SnippetUrlReadSerializer, SnippetSerializerRead, LanguageSerializer
 
 TAGS_LIMIT = 5
 
@@ -260,3 +260,17 @@ def update_snippet(request):
     except IntegrityError as error:
         return JsonResponse(serializer.errors, status=400)
     return HttpResponse(status=201)
+
+
+@csrf_exempt
+def read_language(request):
+    languages = Language.objects.all()
+    serializer = LanguageSerializer(languages, many=True)
+    return JsonResponse(serializer.data, safe=False)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def language_view(request):
+    if request.method == 'GET':
+        return read_language(request)
