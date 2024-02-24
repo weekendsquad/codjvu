@@ -2,11 +2,10 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
-from rest_framework.permissions import IsAuthenticated
 from manager.const import *
 from custom_auth.decorators import enforce_csrf
-from snippet.serializers import TagSerializer
-from .serializers import LanguageSerializer, SettingSerializer
+from snippet.serializers import TagSerializer, LanguageSerializer
+from .serializers import SettingSerializer
 from rest_framework import permissions
 from snippet.models import Language, Tag
 from .models import Setting
@@ -17,10 +16,8 @@ class IsSystemAdmin(permissions.BasePermission):
         return bool(request.user and request.user.is_system_admin)
 
 
-@api_view(['POST'])
-@permission_classes([IsSystemAdmin])
 @enforce_csrf
-def language_view(request):
+def add_language(request):
     data = request.data
     serializer = LanguageSerializer(data=data)
     if serializer.is_valid():
@@ -29,19 +26,20 @@ def language_view(request):
     return JsonResponse(serializer.errors, status=400)
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-@csrf_exempt
-def language_list_view(request):
-    languages = Language.objects.all()
-    serializer = LanguageSerializer(languages, many=True)
-    return JsonResponse(serializer.data, safe=False)
-
-
-@api_view(['PUT'])
-@permission_classes([IsSystemAdmin])
 @enforce_csrf
-def language_update_view(request):
+def delete_language(request):
+    data = JSONParser().parse(request)
+    try:
+        language = Language.objects.get(pk=data["id"])
+    except Language.DoesNotExist:
+        return HttpResponse(status=404)
+
+    language.delete()
+    return HttpResponse(status=204)
+
+
+@enforce_csrf
+def update_language(request):
     data = JSONParser().parse(request)
     try:
         language = Language.objects.get(pk=data["id"])
@@ -55,18 +53,15 @@ def language_update_view(request):
     return JsonResponse(serializer.errors, status=400)
 
 
-@api_view(['DELETE'])
+@api_view(['POST', 'PUT', 'DELETE'])
 @permission_classes([IsSystemAdmin])
-@enforce_csrf
-def language_delete_view(request):
-    data = JSONParser().parse(request)
-    try:
-        language = Language.objects.get(pk=data["id"])
-    except Language.DoesNotExist:
-        return HttpResponse(status=404)
-
-    language.delete()
-    return HttpResponse(status=204)
+def language_view(request):
+    if request.method == 'POST':
+        return add_language(request)
+    elif request.method == 'DELETE':
+        return delete_language(request)
+    elif request.method == 'PUT':
+        return update_language(request)
 
 
 @api_view(['GET'])
