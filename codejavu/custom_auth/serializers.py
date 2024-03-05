@@ -5,14 +5,12 @@ from .models import User
 
 
 class LoginSerializer(serializers.ModelSerializer):
-    refresh_token = serializers.CharField(required=False)
     last_login = serializers.DateTimeField(required=False)
 
     class Meta:
         model = User
         fields = ('email', 'password')
         extra_kwargs = {
-            'refresh_token': {'required': True},
             'last_login': {'required': True}
         }
 
@@ -20,7 +18,6 @@ class LoginSerializer(serializers.ModelSerializer):
         """
         Update and return an existing `User` instance refresh_token and last_login time
         """
-        instance.refresh_token = validated_data.get('refresh_token', instance.refresh_token)
         instance.last_login = validated_data.get('last_login', instance.last_login)
         instance.save()
         return instance
