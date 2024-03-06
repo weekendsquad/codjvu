@@ -11,6 +11,13 @@ services:
       POSTGRES_USER: postgres
     ports:
       - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - database:/var/lib/postgresql/data
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -21,3 +28,18 @@ services:
       PGADMIN_DEFAULT_PASSWORD: password
     ports:
       - "8080:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+      build: .
+      volumes:
+        - .:/web
+      ports:
+        - "8000:8000"
+      depends_on:
+        postgres:
+          condition: service_healthy
+volumes:
+  database:
