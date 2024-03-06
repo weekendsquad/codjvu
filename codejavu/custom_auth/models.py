@@ -34,7 +34,6 @@ class User(AbstractBaseUser):
     is_system_admin = models.BooleanField(default=False)
     is_pro = models.BooleanField(default=True)
     is_trial = models.BooleanField(default=True)
-    refresh_token = models.CharField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

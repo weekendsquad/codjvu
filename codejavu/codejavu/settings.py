@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-e0s56r79$_+o*lu@l$4=p^o@jg(ajq+!yrcqgq*o1h*)1%w#l+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -128,7 +128,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "custom_auth.User"
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ORIGIN_WHITELIST = ['http://localhost:3000']
+CORS_ORIGIN_WHITELIST = ['http://localhost:4200']
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'custom_auth.verify.JWTAuthentication',
@@ -138,11 +138,14 @@ REST_FRAMEWORK = {
     )
 }
 CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
+CORS_EXPOSE_HEADERS = [
+    "Token",
+]
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": False,
+    "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
 
     "ALGORITHM": "HS256",
@@ -170,7 +173,7 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
 
-    "TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainPairSerializer",
+    "TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.",
     "TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSerializer",
     "TOKEN_VERIFY_SERIALIZER": "rest_framework_simplejwt.serializers.TokenVerifySerializer",
     "TOKEN_BLACKLIST_SERIALIZER": "rest_framework_simplejwt.serializers.TokenBlacklistSerializer",
