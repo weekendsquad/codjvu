@@ -3,7 +3,7 @@
 import logging
 
 from django.db import migrations
-
+import os
 logger = logging.getLogger(__name__)
 
 
@@ -11,8 +11,8 @@ def generate_superuser(apps, schema_editor):
     from django.contrib.auth import get_user_model
 
     # env = environ.Env()
-    PASSWORD = "Azythromycine500MG"
-    EMAIL = "system@admin.com"
+    PASSWORD = os.getenv('SYS_ADMIN_PASSWORD')
+    EMAIL = os.getenv("SYS_ADMIN_EMAIL")
 
     user = get_user_model()
 

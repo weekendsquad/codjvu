@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 from datetime import timedelta
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,10 +21,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-e0s56r79$_+o*lu@l$4=p^o@jg(ajq+!yrcqgq*o1h*)1%w#l+"
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(os.getenv('IS_DEBUG'))
 
 ALLOWED_HOSTS = ["*"]
 
@@ -81,11 +82,11 @@ WSGI_APPLICATION = "codejavu.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'codejavudb',
-        'USER': 'postgres',
-        'PASSWORD': 'password',
-        'HOST': 'host.docker.internal',  # localhost or host.docker.internal
-        'PORT': '5432',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),  # localhost or host.docker.internal
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
