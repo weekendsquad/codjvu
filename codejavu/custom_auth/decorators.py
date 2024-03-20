@@ -15,7 +15,6 @@ def enforce_csrf(function):
         check = CSRFCheck(request.META.get('HTTP_X_CSRFTOKEN'))
         check.process_request(request)
         reason = check.process_view(request, None, (), {})
-        print(reason)
         if reason:
             raise exception.PermissionDenied('CSRF Failed: %s' % reason)
         return function(request, *args, **kwargs)

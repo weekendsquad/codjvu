@@ -17,6 +17,7 @@ class Tag(models.Model):
 class Snippet(models.Model):
     id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=80)
     snippet = models.TextField()
     language = models.ForeignKey(Language, null=True, on_delete=models.SET_NULL)
 

@@ -16,7 +16,7 @@ class IsSystemAdmin(permissions.BasePermission):
         return bool(request.user and request.user.is_system_admin)
 
 
-@enforce_csrf
+@csrf_exempt
 def add_language(request):
     data = request.data
     serializer = LanguageSerializer(data=data)
@@ -26,7 +26,7 @@ def add_language(request):
     return JsonResponse(serializer.errors, status=400)
 
 
-@enforce_csrf
+@csrf_exempt
 def delete_language(request):
     data = JSONParser().parse(request)
     try:
@@ -38,7 +38,7 @@ def delete_language(request):
     return HttpResponse(status=204)
 
 
-@enforce_csrf
+@csrf_exempt
 def update_language(request):
     data = JSONParser().parse(request)
     try:
@@ -79,7 +79,7 @@ def read_tag_limit(request):
     return JsonResponse(serializer.data)
 
 
-@enforce_csrf
+@csrf_exempt
 def update_tag_limit(request):
     data = JSONParser().parse(request)
     try:

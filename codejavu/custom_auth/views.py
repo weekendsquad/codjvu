@@ -60,9 +60,10 @@ def token_refresh_view(request):
     serializer = TokenRefreshSerializer(data=request.data)
     try:
         serializer.is_valid(raise_exception=True)
-    except TokenError as e:
-        return JsonResponse(e, status=400)
+    except Exception as e:
+        return JsonResponse(data={}, status=400)
     response = JsonResponse(data={}, status=200)
+
     response['access_token'] = serializer.validated_data['access']
     response['refresh_token'] = serializer.validated_data['refresh']
     return response

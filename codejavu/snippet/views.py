@@ -7,9 +7,11 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
 from custom_auth.decorators import enforce_csrf
+from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import Tag, Snippet, SnippetTag, Url, Language
 from .serializers import TagSerializer, TagReadSerializer, SnippetSerializer, SnippetTagSerializer, \
-    SnippetTagSerializerRead, SnippetUrlSerializer, SnippetUrlReadSerializer, SnippetSerializerRead, LanguageSerializer
+    SnippetUrlSerializer, SnippetUrlReadSerializer, SnippetReadSerializer, LanguageSerializer, \
+    SnippetTagReadSerializer
 
 TAGS_LIMIT = 5
 
@@ -61,7 +63,7 @@ def tag_view(request):
         return update_tag(request)
 
 
-@enforce_csrf
+@csrf_exempt
 def create_tag(request):
     data = request.data
     data['user'] = request.user.id
@@ -96,7 +98,7 @@ def get_private_tag(request):
     return private_tags_serializer.data
 
 
-@enforce_csrf
+@csrf_exempt
 def update_tag(request):
     data = JSONParser().parse(request)
     data["user"] = request.user.id
@@ -112,7 +114,7 @@ def update_tag(request):
     return JsonResponse(serializer.errors, status=400)
 
 
-@enforce_csrf
+@csrf_exempt
 def delete_tag(request):
     data = JSONParser().parse(request)
     try:
@@ -136,16 +138,16 @@ def snippet_view(request, snippet_id=None):
         return update_snippet(request)
 
 
-@enforce_csrf
+@csrf_exempt
 @transaction.atomic
 def create_snippet(request):
-    tag_id = request.data['tag_id']
-    urls = request.data['url']
-
+    tag_id = request.data['tag_info']
+    urls = request.data['url_info']
     snippet_data = {
         'user': request.user.id,
+        'title': request.data['title'],
         'snippet': request.data['snippet'],
-        'language': request.data['language_id']
+        'language': request.data['language']
     }
     try:
         with transaction.atomic():
@@ -185,28 +187,28 @@ def read_snippet(request, snippet_id=None):
         except Snippet.DoesNotExist:
             return HttpResponse(status=404)
         else:
-            data["snippet"] = snippet_serializer.data
+            data = snippet_serializer.data
         try:
-            snippet_tag_serializer = SnippetTagSerializerRead(SnippetTag.objects.filter(snippet=snippet_id).all(),
+            snippet_tag_serializer = SnippetTagReadSerializer(SnippetTag.objects.filter(snippet=snippet_id).all(),
                                                               many=True)
         except Tag.DoesNotExist:
-            data["tag"] = []
+            data["tag_info"] = []
         else:
-            data["tag"] = snippet_tag_serializer.data
+            data["tag_info"] = [d["tag"] for d in snippet_tag_serializer.data]
         try:
             snippet_url_serializer = SnippetUrlReadSerializer(Url.objects.filter(snippet=snippet_id).all(),
                                                               many=True)
         except Url.DoesNotExist:
-            data["url"] = []
+            data["url_info"] = []
         else:
-            data["url"] = snippet_url_serializer.data
+            data["url_info"] = snippet_url_serializer.data
         return JsonResponse(data, status=200, safe=False)
     else:
-        snippet_serializer = SnippetSerializerRead(Snippet.objects.filter(user=request.user).all(), many=True)
+        snippet_serializer = SnippetReadSerializer(Snippet.objects.filter(user=request.user).all(), many=True)
         return JsonResponse(snippet_serializer.data, status=200, safe=False)
 
 
-@enforce_csrf
+@csrf_exempt
 def delete_snippet(request):
     data = JSONParser().parse(request)
     try:
@@ -217,14 +219,15 @@ def delete_snippet(request):
     return HttpResponse(status=204)
 
 
-@enforce_csrf
+@csrf_exempt
 @transaction.atomic
 def update_snippet(request):
     data = JSONParser().parse(request)
     snippet_data = {
         'user': request.user.id,
+        'title': data['title'],
         'snippet': data['snippet'],
-        'language': data['language_id']
+        'language': data['language']
     }
     try:
         with transaction.atomic():
@@ -241,10 +244,10 @@ def update_snippet(request):
             if snippet_url:
                 snippet_url.delete()
 
-            snippet_tag_data = create_list_of_object(data['id'], data['tag_id'], 'tag')
+            snippet_tag_data = create_list_of_object(data['id'], data['tag_info'], 'tag')
             snippet_tag_serializer = SnippetTagSerializer(data=snippet_tag_data, many=True)
 
-            snippet_url_data = create_list_of_object(data['id'], data['url'], 'url', request.user.id)
+            snippet_url_data = create_list_of_object(data['id'], data['url_info'], 'url', request.user.id)
             snippet_url_serializer = SnippetUrlSerializer(data=snippet_url_data, many=True)
 
             if snippet_tag_serializer.is_valid():
